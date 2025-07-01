@@ -36,7 +36,7 @@ except Exception as e:
 
 # Load data
 try:
-    df = pd.read_csv("output/sampled_reddit_comments_by_city.csv")
+    df = pd.read_csv("output/sampled_reddit_comments_by_city_deidentified.csv")
     # Limit to first 20 comments for testing
     #df = df.head(20)
     print(f"Loaded {len(df)} comments to process (testing mode)")
