@@ -1,0 +1,13 @@
+pandas
+matplotlib
+scipy
+numpy
+seaborn
+tqdm
+scikit-learn
+requests
+spacy
+pydeidentify
+transformers
+torch
+huggingface_hub
