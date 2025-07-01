@@ -11,3 +11,4 @@ pydeidentify
 transformers
 torch
 huggingface_hub
+datasets
