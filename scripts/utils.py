@@ -9,9 +9,13 @@ def create_classification_prompt(comment: str) -> str:
 
 DEFINITIONS:
 
-1. Comment Types (choose exactly one):
-   - Direct Comment: The speaker expresses their own views about people experiencing homelessness (PEH)
-   - Reporting: The speaker describes or criticizes others' views/behaviors regarding PEH
+1. Comment Types (select all that apply):
+   - Ask a Genuine Question: The speaker asks a sincere question about homelessness or related issues
+   - Ask a Rhetorical Question: The speaker asks a question not intended to be answered, often to make a point
+   - Provide a Fact or Claim: The speaker provides a factual statement or claim about homelessness
+   - Provide an Observation: The speaker shares an observation about homelessness or related situations
+   - Express their Opinion: The speaker expresses their own views or feelings about homelessness
+   - Express Others Opinions: The speaker describes or references the views or feelings of others about homelessness
 
 2. Critique Categories (select all that apply):
    - Money Aid Allocation: Discussion of financial resources, aid distribution, or resource allocation for homelessness
@@ -40,7 +44,7 @@ INSTRUCTIONS:
 
 FORMAT YOUR RESPONSE EXACTLY AS FOLLOWS:
 
-Comment Type: [direct/reporting]
+Comment Type: [ask a genuine question, ask a rhetorical question, provide a fact or claim, provide an observation, express their opinion, express others opinions]
 Critique Category: [money aid allocation, government critique, societal critique]
 Response Category: [solutions/interventions]
 Perception Type: [personal interaction, media portrayal, not in my backyard, harmful generalization, deserving/undeserving]
@@ -154,7 +158,14 @@ def get_model_config(model_name: str) -> Dict:
     return configs.get(model_name.lower(), configs["qwen"])
 
 # Define categories
-COMMENT_TYPES = ["direct", "reporting"]
+COMMENT_TYPES = [
+    "ask a genuine question",
+    "ask a rhetorical question",
+    "provide a fact or claim",
+    "provide an observation",
+    "express their opinion",
+    "express others opinions"
+]
 CRITIQUE_CATEGORIES = ["money aid allocation", "government critique", "societal critique"]
 RESPONSE_CATEGORIES = ["solutions/interventions"]
 PERCEPTION_TYPES = ["personal interaction", "media portrayal", "not in my backyard", "harmful generalization", "deserving/undeserving"]

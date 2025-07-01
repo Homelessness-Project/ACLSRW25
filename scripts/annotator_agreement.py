@@ -90,7 +90,13 @@ def main():
     df = load_annotations(INPUT_FILE)
 
     label_columns = [
-        'Direct', 'Reporting', 'money aid allocation', 'government critique',
+        'ask a genuine question',
+        'ask a rhetorical question',
+        'provide a fact or claim',
+        'provide an observation',
+        'express their opinion',
+        'Express Others Opinions',
+        'money aid allocation', 'government critique',
         'societal critique', 'solutions/interventions', 'personal interaction',
         'media portrayal', 'not in my backyard', 'harmful generalization',
         'deserving/undeserving', 'Racist'

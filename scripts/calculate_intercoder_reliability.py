@@ -13,8 +13,12 @@ os.makedirs('output/charts', exist_ok=True)
 
 # Mapping from soft label columns to classification columns
 field_map = {
-    'Direct': 'Comment_direct',
-    'Reporting': 'Comment_reporting',
+    'ask a genuine question': 'Comment_ask a genuine question',
+    'ask a rhetorical question': 'Comment_ask a rhetorical question',
+    'provide a fact or claim': 'Comment_provide a fact or claim',
+    'provide an observation': 'Comment_provide an observation',
+    'Express their Opinion': 'Comment_express their opinion',
+    'Express Others Opinions': 'Comment_express others opinions',
     'money aid allocation': 'Critique_money aid allocation',
     'government critique': 'Critique_government critique',
     'societal critique': 'Critique_societal critique',
