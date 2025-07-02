@@ -7,6 +7,7 @@ from tqdm import tqdm
 import argparse
 from matplotlib.backends.backend_pdf import PdfPages
 import os
+import scipy.stats as stats
 
 # Create output directories if they don't exist
 os.makedirs('output/charts', exist_ok=True)
@@ -17,8 +18,8 @@ field_map = {
     'ask a rhetorical question': 'Comment_ask a rhetorical question',
     'provide a fact or claim': 'Comment_provide a fact or claim',
     'provide an observation': 'Comment_provide an observation',
-    'Express their Opinion': 'Comment_express their opinion',
-    'Express Others Opinions': 'Comment_express others opinions',
+    'express their opinion': 'Comment_express their opinion',
+    'express others opinions': 'Comment_express others opinions',
     'money aid allocation': 'Critique_money aid allocation',
     'government critique': 'Critique_government critique',
     'societal critique': 'Critique_societal critique',
@@ -122,8 +123,8 @@ def calculate_soft_label_agreement(llama_df, qwen_df, soft_labels_df, field):
         'qwen_values': qwen_values
     }
 
-def plot_confusion_matrix(cm, field, kappa, llama_positives, qwen_positives, ax, delta_info=None):
-    """Plot confusion matrix on the given axis."""
+def plot_confusion_matrix(cm, field, kappa, llama_positives, qwen_positives, ax, delta_info=None, llama_soft_agree=None, qwen_soft_agree=None):
+    """Plot confusion matrix on the given axis, with optional soft label agreement annotations."""
     # Get labels based on field type
     if field == "Racist":
         labels = ["Yes", "No"]  # Yes (1) is positive, No (0) is negative
@@ -160,6 +161,10 @@ def plot_confusion_matrix(cm, field, kappa, llama_positives, qwen_positives, ax,
     else:
         title += f"\nLlama +: {llama_positives}"
         title += f"\nQwen +: {qwen_positives}"
+    
+    # Add soft label agreement annotation if provided
+    if llama_soft_agree is not None and qwen_soft_agree is not None:
+        title += f"\nLlama-Soft: {llama_soft_agree:.2f}  Qwen-Soft: {qwen_soft_agree:.2f}"
     
     # Add title with kappa score and positive counts
     ax.set_title(title, fontweight='bold')
@@ -236,6 +241,9 @@ def plot_soft_label_comparison(soft_results, pdf_path):
         'Qwen False Positive': qwen_fp,
         'Qwen False Negative': qwen_fn
     })
+    
+    # Save agreement data to CSV
+    agreement_df.to_csv('output/charts/llm_soft_label_agreement.csv', index=False)
     
     # Plot grouped, stacked bars
     fig, ax1 = plt.subplots(figsize=(9, 9))  # Changed to square with full width
@@ -316,6 +324,76 @@ def plot_soft_label_comparison(soft_results, pdf_path):
         pdf.savefig(fig)
         plt.close()
 
+def gold_standard_by_city_size():
+    # Load annotation data
+    df = pd.read_csv('annotation/raw_scores.csv', header=1)
+    
+    # Define city groups
+    small_cities = [
+        'southbend', 'rockford', 'kzoo', 'scranton', 'fayetteville'
+    ]
+    large_cities = [
+        'sanfrancisco', 'portland', 'baltimore', 'buffalo', 'elpaso'
+    ]
+    
+    # Label columns (full agreement = 2)
+    label_columns = [
+        'ask a genuine question', 'ask a rhetorical question', 'provide a fact or claim',
+        'provide an observation', 'express their opinion', 'express others opinions',
+        'money aid allocation', 'government critique', 'societal critique',
+        'solutions/interventions', 'personal interaction', 'media portrayal',
+        'not in my backyard', 'harmful generalization', 'deserving/undeserving', 'Racist'
+    ]
+    
+    # For each city, compute prevalence (proportion of comments with full agreement for each label)
+    df['city_size'] = df['City'].apply(lambda x: 'Small' if x in small_cities else ('Large' if x in large_cities else 'Other'))
+    df = df[df['city_size'].isin(['Small', 'Large'])]
+    
+    # Prepare results
+    rows = []
+    for label in label_columns:
+        small_vals = df[df['city_size']=='Small'][label] == 2
+        large_vals = df[df['city_size']=='Large'][label] == 2
+        small_prevs = small_vals.groupby(df[df['city_size']=='Small']['City']).mean()
+        large_prevs = large_vals.groupby(df[df['city_size']=='Large']['City']).mean()
+        small_mean = small_prevs.mean()
+        small_std = small_prevs.std(ddof=0)
+        large_mean = large_prevs.mean()
+        large_std = large_prevs.std(ddof=0)
+        # t-test for difference in means
+        if len(small_prevs) > 1 and len(large_prevs) > 1:
+            _, p_value = stats.ttest_ind(small_prevs, large_prevs, equal_var=False)
+        else:
+            p_value = float('nan')
+        rows.append({
+            'Category': label,
+            'Large_Mean': large_mean,
+            'Large_Std': large_std,
+            'Small_Mean': small_mean,
+            'Small_Std': small_std,
+            'p_value': p_value
+        })
+    stats_df = pd.DataFrame(rows)
+    stats_df.to_csv('output/charts/gold_standard_by_city_size_stats.csv', index=False)
+    
+    # Plot
+    fig, ax = plt.subplots(figsize=(10, 6))
+    x = np.arange(len(label_columns))
+    width = 0.35
+    ax.bar(x - width/2, stats_df['Small_Mean'], width, yerr=stats_df['Small_Std'], label='Small Cities', capsize=5, color='skyblue')
+    ax.bar(x + width/2, stats_df['Large_Mean'], width, yerr=stats_df['Large_Std'], label='Large Cities', capsize=5, color='salmon')
+    ax.set_xticks(x)
+    ax.set_xticklabels(label_columns, rotation=45, ha='right', fontsize=10, fontweight='bold')
+    ax.set_ylabel('Prevalence (Full Agreement)', fontweight='bold')
+    ax.set_xlabel('Category', fontweight='bold')
+    ax.set_ylim(0, 1)
+    ax.set_title('Gold Standard Annotation Prevalence by City Size (Full Agreement Only)\nMin=0, Max=1. Statistical test: difference in prevalence between clusters', fontweight='bold')
+    legend = ax.legend(fontsize=12, title_fontproperties={'weight':'bold'}, prop={'weight':'bold'})
+    plt.setp(legend.get_texts(), fontweight='bold')
+    plt.tight_layout()
+    plt.savefig('output/charts/gold_standard_by_city_size.pdf')
+    plt.close()
+
 def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser(description='Calculate inter-coder reliability between Llama and Qwen models')
@@ -381,7 +459,9 @@ def main():
                 stats['kappa'],
                 stats['llama_positives'],
                 stats['qwen_positives'],
-                ax
+                ax,
+                llama_soft_agree=soft_results[field]['llama_agreement'],
+                qwen_soft_agree=soft_results[field]['qwen_agreement']
             )
         
         plt.tight_layout()
@@ -507,6 +587,9 @@ def main():
     })
     counts_df.to_csv("output/charts/category_counts.csv", index=False)
     print("Category counts saved to output/charts/category_counts.csv")
+
+    # Add gold standard by city size analysis (for testing)
+    gold_standard_by_city_size()
 
 if __name__ == "__main__":
     main() 
