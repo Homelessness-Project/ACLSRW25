@@ -1,6 +1,10 @@
 Label,Positive Agreement (2),Partial Agreement (1),Negative Agreement (0),Total,Agreement Rate (%),Positive Prevalence (%)
-Direct,361,126,13,500,74.8,97.4
-Reporting,67,153,280,500,69.4,44.0
+ask a genuine question,48,47,405,500,90.6,19.0
+ask a rhetorical question,37,69,394,500,86.2,21.2
+provide a fact or claim,196,181,123,500,63.8,75.4
+provide an observation,98,138,264,500,72.4,47.2
+express their opinion,350,103,47,500,79.4,90.6
+express others opinions,27,123,350,500,75.4,30.0
 money aid allocation,39,153,308,500,69.4,38.4
 government critique,28,79,393,500,84.2,21.4
 societal critique,37,157,306,500,68.6,38.8

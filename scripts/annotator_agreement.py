@@ -95,7 +95,7 @@ def main():
         'provide a fact or claim',
         'provide an observation',
         'express their opinion',
-        'Express Others Opinions',
+        'express others opinions',
         'money aid allocation', 'government critique',
         'societal critique', 'solutions/interventions', 'personal interaction',
         'media portrayal', 'not in my backyard', 'harmful generalization',
