@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from sklearn.metrics import cohen_kappa_score, confusion_matrix
+from sklearn.metrics import cohen_kappa_score, confusion_matrix, f1_score, accuracy_score, precision_score, recall_score
 import seaborn as sns
 import matplotlib.pyplot as plt
 from tqdm import tqdm
@@ -588,8 +588,171 @@ def main():
     counts_df.to_csv("output/charts/category_counts.csv", index=False)
     print("Category counts saved to output/charts/category_counts.csv")
 
+    # Calculate F1 scores for each field (treating soft label 0.5 as 0)
+    f1_rows = []
+    for field in fields:
+        # Prepare ground truth and predictions
+        soft_bin = (soft_results[field]['soft_values'] == 1).astype(int)  # 1 if soft label is 1, else 0
+        llama_pred = (soft_results[field]['llama_values'] == 1).astype(int)
+        qwen_pred = (soft_results[field]['qwen_values'] == 1).astype(int)
+        # F1 scores
+        llama_f1 = f1_score(soft_bin, llama_pred)
+        qwen_f1 = f1_score(soft_bin, qwen_pred)
+        f1_rows.append({
+            'Field': field,
+            'Llama_F1': llama_f1,
+            'Qwen_F1': qwen_f1
+        })
+    f1_df = pd.DataFrame(f1_rows)
+    f1_df.to_csv('output/charts/llm_f1_scores.csv', index=False)
+    print('F1 scores saved to output/charts/llm_f1_scores.csv')
+
+    # Calculate classification metrics for each field (treating soft label 0.5 as 0)
+    metrics_rows_rounded = []
+    metrics_rows_clear = []
+    for field in fields:
+        # Prepare ground truth and predictions for 'rounded' (0.5 -> 0)
+        soft_bin_rounded = (soft_results[field]['soft_values'] == 1).astype(int)  # 1 if soft label is 1, else 0
+        llama_pred_rounded = (soft_results[field]['llama_values'] == 1).astype(int)
+        qwen_pred_rounded = (soft_results[field]['qwen_values'] == 1).astype(int)
+        # Metrics for Llama (rounded)
+        llama_f1_r = f1_score(soft_bin_rounded, llama_pred_rounded)
+        llama_acc_r = accuracy_score(soft_bin_rounded, llama_pred_rounded)
+        llama_prec_r = precision_score(soft_bin_rounded, llama_pred_rounded, zero_division=0)
+        llama_rec_r = recall_score(soft_bin_rounded, llama_pred_rounded, zero_division=0)
+        llama_kappa_r = cohen_kappa_score(soft_bin_rounded, llama_pred_rounded)
+        # Metrics for Qwen (rounded)
+        qwen_f1_r = f1_score(soft_bin_rounded, qwen_pred_rounded)
+        qwen_acc_r = accuracy_score(soft_bin_rounded, qwen_pred_rounded)
+        qwen_prec_r = precision_score(soft_bin_rounded, qwen_pred_rounded, zero_division=0)
+        qwen_rec_r = recall_score(soft_bin_rounded, qwen_pred_rounded, zero_division=0)
+        qwen_kappa_r = cohen_kappa_score(soft_bin_rounded, qwen_pred_rounded)
+        metrics_rows_rounded.append({
+            'Field': field,
+            'Llama_F1': llama_f1_r,
+            'Llama_Accuracy': llama_acc_r,
+            'Llama_Precision': llama_prec_r,
+            'Llama_Recall': llama_rec_r,
+            'Llama_Kappa': llama_kappa_r,
+            'Qwen_F1': qwen_f1_r,
+            'Qwen_Accuracy': qwen_acc_r,
+            'Qwen_Precision': qwen_prec_r,
+            'Qwen_Recall': qwen_rec_r,
+            'Qwen_Kappa': qwen_kappa_r
+        })
+        # Prepare ground truth and predictions for 'clear only' (exclude 0.5)
+        mask_clear = (soft_results[field]['soft_values'] != 0.5)
+        if np.sum(mask_clear) > 0:
+            soft_bin_clear = (soft_results[field]['soft_values'][mask_clear] == 1).astype(int)
+            llama_pred_clear = (soft_results[field]['llama_values'][mask_clear] == 1).astype(int)
+            qwen_pred_clear = (soft_results[field]['qwen_values'][mask_clear] == 1).astype(int)
+            # Metrics for Llama (clear)
+            llama_f1_c = f1_score(soft_bin_clear, llama_pred_clear)
+            llama_acc_c = accuracy_score(soft_bin_clear, llama_pred_clear)
+            llama_prec_c = precision_score(soft_bin_clear, llama_pred_clear, zero_division=0)
+            llama_rec_c = recall_score(soft_bin_clear, llama_pred_clear, zero_division=0)
+            llama_kappa_c = cohen_kappa_score(soft_bin_clear, llama_pred_clear)
+            # Metrics for Qwen (clear)
+            qwen_f1_c = f1_score(soft_bin_clear, qwen_pred_clear)
+            qwen_acc_c = accuracy_score(soft_bin_clear, qwen_pred_clear)
+            qwen_prec_c = precision_score(soft_bin_clear, qwen_pred_clear, zero_division=0)
+            qwen_rec_c = recall_score(soft_bin_clear, qwen_pred_clear, zero_division=0)
+            qwen_kappa_c = cohen_kappa_score(soft_bin_clear, qwen_pred_clear)
+        else:
+            llama_f1_c = llama_acc_c = llama_prec_c = llama_rec_c = llama_kappa_c = np.nan
+            qwen_f1_c = qwen_acc_c = qwen_prec_c = qwen_rec_c = qwen_kappa_c = np.nan
+        metrics_rows_clear.append({
+            'Field': field,
+            'Llama_F1': llama_f1_c,
+            'Llama_Accuracy': llama_acc_c,
+            'Llama_Precision': llama_prec_c,
+            'Llama_Recall': llama_rec_c,
+            'Llama_Kappa': llama_kappa_c,
+            'Qwen_F1': qwen_f1_c,
+            'Qwen_Accuracy': qwen_acc_c,
+            'Qwen_Precision': qwen_prec_c,
+            'Qwen_Recall': qwen_rec_c,
+            'Qwen_Kappa': qwen_kappa_c
+        })
+    metrics_df_rounded = pd.DataFrame(metrics_rows_rounded)
+    # Round all values to 2 decimals before saving
+    metrics_df_rounded = metrics_df_rounded.round(2)
+    metrics_df_rounded.to_csv('output/charts/llm_classification_metrics_rounded.csv', index=False)
+    print('Classification metrics (0.5 rounded to 0) saved to output/charts/llm_classification_metrics_rounded.csv')
+    metrics_df_clear = pd.DataFrame(metrics_rows_clear)
+    # Add human annotator agreement rate (proportion of clear cases)
+    agreement_rates = []
+    for field in fields:
+        soft_vals = soft_results[field]['soft_values']
+        n_clear = np.sum((soft_vals == 0) | (soft_vals == 1))
+        agreement_rate = n_clear / len(soft_vals) if len(soft_vals) > 0 else np.nan
+        agreement_rates.append(agreement_rate)
+    metrics_df_clear['Human_Annotator_Agreement_Rate'] = agreement_rates
+    metrics_df_clear = metrics_df_clear.round(2)
+    metrics_df_clear.to_csv('output/charts/llm_classification_metrics_clear.csv', index=False)
+    print('Classification metrics (0.5 excluded) saved to output/charts/llm_classification_metrics_clear.csv')
+
     # Add gold standard by city size analysis (for testing)
     gold_standard_by_city_size()
+
+    # Correlation analysis between gold standard variables (all rows, ignore city)
+    print('Computing correlation matrix between gold standard annotation variables (all data)...')
+    gold_df = pd.read_csv('annotation/raw_scores.csv', header=1)
+    label_columns = [
+        'ask a genuine question', 'ask a rhetorical question', 'provide a fact or claim',
+        'provide an observation', 'express their opinion', 'express others opinions',
+        'money aid allocation', 'government critique', 'societal critique',
+        'solutions/interventions', 'personal interaction', 'media portrayal',
+        'not in my backyard', 'harmful generalization', 'deserving/undeserving', 'Racist'
+    ]
+    corr_matrix = gold_df[label_columns].corr()
+    corr_matrix.to_csv('output/charts/gold_standard_correlation_matrix.csv')
+    print('Gold standard correlation matrix saved to output/charts/gold_standard_correlation_matrix.csv')
+    # Plot heatmap
+    plt.figure(figsize=(12, 10))
+    ax = sns.heatmap(corr_matrix, annot=True, fmt='.2f', cmap='coolwarm', square=True, cbar_kws={'label': 'Correlation'})
+    plt.title('Correlation Matrix of Gold Standard Annotation Variables', fontsize=16, fontweight='bold')
+    ax.set_xlabel('Variable', fontweight='bold')
+    ax.set_ylabel('Variable', fontweight='bold')
+    # Make tick labels bold
+    for label in ax.get_xticklabels():
+        label.set_fontweight('bold')
+    for label in ax.get_yticklabels():
+        label.set_fontweight('bold')
+    plt.tight_layout()
+    plt.savefig('output/charts/gold_standard_correlation_matrix.pdf')
+    plt.close()
+    print('Gold standard correlation matrix heatmap saved to output/charts/gold_standard_correlation_matrix.pdf')
+
+    # Correlation analysis between soft label variables (treat 0.5 as 0, ignore city)
+    print('Computing correlation matrix between soft label variables (0.5 as 0, all data)...')
+    soft_label_columns = [
+        'ask a genuine question', 'ask a rhetorical question', 'provide a fact or claim',
+        'provide an observation', 'express their opinion', 'express others opinions',
+        'money aid allocation', 'government critique', 'societal critique',
+        'solutions/interventions', 'personal interaction', 'media portrayal',
+        'not in my backyard', 'harmful generalization', 'deserving/undeserving', 'Racist'
+    ]
+    # Treat 0.5 as 0
+    soft_bin_df = soft_labels_df[soft_label_columns].replace(0.5, 0)
+    corr_matrix_soft = soft_bin_df.corr()
+    corr_matrix_soft.to_csv('output/charts/soft_label_correlation_matrix.csv')
+    print('Soft label correlation matrix saved to output/charts/soft_label_correlation_matrix.csv')
+    # Plot heatmap
+    plt.figure(figsize=(12, 10))
+    ax = sns.heatmap(corr_matrix_soft, annot=True, fmt='.2f', cmap='coolwarm', square=True, cbar_kws={'label': 'Correlation'})
+    plt.title('Correlation Matrix of Soft Label Variables (0.5 as 0)', fontsize=16, fontweight='bold')
+    ax.set_xlabel('Variable', fontweight='bold')
+    ax.set_ylabel('Variable', fontweight='bold')
+    # Make tick labels bold
+    for label in ax.get_xticklabels():
+        label.set_fontweight('bold')
+    for label in ax.get_yticklabels():
+        label.set_fontweight('bold')
+    plt.tight_layout()
+    plt.savefig('output/charts/soft_label_correlation_matrix.pdf')
+    plt.close()
+    print('Soft label correlation matrix heatmap saved to output/charts/soft_label_correlation_matrix.pdf')
 
 if __name__ == "__main__":
     main() 
