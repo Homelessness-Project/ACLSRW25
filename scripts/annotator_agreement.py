@@ -99,7 +99,7 @@ def main():
         'money aid allocation', 'government critique',
         'societal critique', 'solutions/interventions', 'personal interaction',
         'media portrayal', 'not in my backyard', 'harmful generalization',
-        'deserving/undeserving', 'Racist'
+        'deserving/undeserving', 'racist'
     ]
 
     soft_df, overall_stats, per_column_df = calculate_agreement(df, label_columns)

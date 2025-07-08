@@ -29,7 +29,7 @@ field_map = {
     'not in my backyard': 'Perception_not in my backyard',
     'harmful generalization': 'Perception_harmful generalization',
     'deserving/undeserving': 'Perception_deserving/undeserving',
-    'Racist': 'Racist'
+    'racist': 'racist'
 }
 
 def load_classifications():
@@ -61,12 +61,12 @@ def calculate_kappa(llama_df, qwen_df, field):
     llama_values = llama_df[field].fillna(0)  # Fill NaN with 0 for flag fields
     qwen_values = qwen_df[field].fillna(0)
     
-    # Convert to int for flag fields (except Racist)
-    if field != "Racist":
+    # Convert to int for flag fields (except racist)
+    if field != "racist":
         llama_values = llama_values.astype(int)
         qwen_values = qwen_values.astype(int)
     else:
-        # For Racist, extract the value from the text
+        # For racist, extract the value from the text
         def extract_racist_value(text):
             if pd.isna(text):
                 return 0
@@ -126,7 +126,7 @@ def calculate_soft_label_agreement(llama_df, qwen_df, soft_labels_df, field):
 def plot_confusion_matrix(cm, field, kappa, llama_positives, qwen_positives, ax, delta_info=None, llama_soft_agree=None, qwen_soft_agree=None):
     """Plot confusion matrix on the given axis, with optional soft label agreement annotations."""
     # Get labels based on field type
-    if field == "Racist":
+    if field == "racist":
         labels = ["Yes", "No"]  # Yes (1) is positive, No (0) is negative
     else:
         labels = ["1", "0"]  # 1 is positive, 0 is negative
@@ -135,8 +135,8 @@ def plot_confusion_matrix(cm, field, kappa, llama_positives, qwen_positives, ax,
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=labels, yticklabels=labels, ax=ax, cbar=True, vmax=500)
     
     # Format field name for display
-    if field == "Racist":
-        title = f"Racist\nCohen's κ = {kappa:.2f}"
+    if field == "racist":
+        title = f"racist\nCohen's κ = {kappa:.2f}"
     elif field.startswith("Comment_"):
         category = "Direct Comment" if field == "Comment_direct" else "Reporting Comment"
         title = f"Comment: {category}\nCohen's κ = {kappa:.2f}"
@@ -342,7 +342,7 @@ def gold_standard_by_city_size():
         'provide an observation', 'express their opinion', 'express others opinions',
         'money aid allocation', 'government critique', 'societal critique',
         'solutions/interventions', 'personal interaction', 'media portrayal',
-        'not in my backyard', 'harmful generalization', 'deserving/undeserving', 'Racist'
+        'not in my backyard', 'harmful generalization', 'deserving/undeserving', 'racist'
     ]
     
     # For each city, compute prevalence (proportion of comments with full agreement for each label)
@@ -703,7 +703,7 @@ def main():
         'provide an observation', 'express their opinion', 'express others opinions',
         'money aid allocation', 'government critique', 'societal critique',
         'solutions/interventions', 'personal interaction', 'media portrayal',
-        'not in my backyard', 'harmful generalization', 'deserving/undeserving', 'Racist'
+        'not in my backyard', 'harmful generalization', 'deserving/undeserving', 'racist'
     ]
     corr_matrix = gold_df[label_columns].corr()
     corr_matrix.to_csv('output/charts/gold_standard_correlation_matrix.csv')
@@ -731,7 +731,7 @@ def main():
         'provide an observation', 'express their opinion', 'express others opinions',
         'money aid allocation', 'government critique', 'societal critique',
         'solutions/interventions', 'personal interaction', 'media portrayal',
-        'not in my backyard', 'harmful generalization', 'deserving/undeserving', 'Racist'
+        'not in my backyard', 'harmful generalization', 'deserving/undeserving', 'racist'
     ]
     # Treat 0.5 as 0
     soft_bin_df = soft_labels_df[soft_label_columns].replace(0.5, 0)

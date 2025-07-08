@@ -32,7 +32,7 @@ DEFINITIONS:
    - Harmful Generalization: Negative stereotypes about PEH
    - Deserving/Undeserving: Judgments about who deserves help
 
-5. Racist Classification:
+5. racist Classification:
    - Yes: Contains explicit or implicit racial bias
    - No: No racial bias present
 
@@ -48,7 +48,7 @@ Comment Type: [ask a genuine question, ask a rhetorical question, provide a fact
 Critique Category: [money aid allocation, government critique, societal critique]
 Response Category: [solutions/interventions]
 Perception Type: [personal interaction, media portrayal, not in my backyard, harmful generalization, deserving/undeserving]
-Racist: [Yes/No]
+racist: [Yes/No]
 Reasoning: [brief explanation]
 
 Comment to analyze:
@@ -215,7 +215,7 @@ def create_output_row(
         "Critique Category": critique_text,
         "Response Category": response_text,
         "Perception Type": perception_text,
-        "Racist": "Yes" if racist_flag else "No",
+        "racist": "Yes" if racist_flag else "No",
         "Reasoning": reasoning,
         "Raw Response": raw_response
     }

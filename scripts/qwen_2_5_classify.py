@@ -96,7 +96,7 @@ for batch_idx in range(total_batches):
             response_text = extract_field(output, "Response Category")
             perception_text = extract_field(output, "Perception Type")
             
-            racist_text = extract_field(output, "Racist")
+            racist_text = extract_field(output, "racist")
             # More strict racist flag extraction
             racist_flag = 0
             if racist_text:

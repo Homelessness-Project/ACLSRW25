@@ -137,7 +137,7 @@ for batch_idx in range(total_batches):
             critique_category = extract_field(classification_output, "Critique Category")
             response_category = extract_field(classification_output, "Response Category")
             perception_type = extract_field(classification_output, "Perception Type")
-            racist = extract_field(classification_output, "Racist")
+            racist = extract_field(classification_output, "racist")
             classification_reasoning = extract_field(classification_output, "Reasoning")
             
             # Extract flags
@@ -159,7 +159,7 @@ for batch_idx in range(total_batches):
                 "Critique Category": critique_category,
                 "Response Category": response_category,
                 "Perception Type": perception_type,
-                "Racist": racist,
+                "racist": racist,
                 "Classification Reasoning": classification_reasoning,
                 "Raw Classification": classification_output
             }
